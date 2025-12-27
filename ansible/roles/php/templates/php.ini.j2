@@ -1,0 +1,12 @@
+; Arquivo gerenciado pelo Ansible. Não edite manualmente.
+
+[PHP]
+
+; Adicionamos aqui as configurações definidas nas variáveis.
+; O loop abaixo irá gerar as linhas dinamicamente.
+{% for key, value in php_ini_settings.items() %}
+{{ key }} = {{ value }}
+{% endfor %}
+
+; Você pode adicionar outras configurações estáticas aqui se precisar
+; ...

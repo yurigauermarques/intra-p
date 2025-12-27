@@ -1,0 +1,29 @@
+---
+- name: Configurar Servidor Web com PHP e Nginx
+  hosts: vps
+  become: yes
+  vars_files:
+    - vars/secrets.yml # Carrega as variáveis criptografadas
+  roles:
+    - role: common
+    - role: firewall
+      vars:
+        allow_ports: true
+    - role: fail2ban
+      vars_files:
+        fail2ban_jails:
+          - sshd
+          - nginx-http-auth
+          - nginx-botsearch
+    - role: php
+      vars:
+        php_ini_settings:
+          date.timezone: "America/Cuiaba"
+        repositorio_php: true
+    - role: nginx
+      vars:
+        nginx_sites:
+          - server_name: "projeto.com.br"
+            root: "/var/www/projeto"
+    - role: postgresql
+    - role: node

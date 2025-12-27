@@ -1,0 +1,23 @@
+---
+# Instalação do Yarn
+- name: Adicionar repositório do Yarn
+  ansible.builtin.shell: |
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+
+- name: Atualizar pacotes após adicionar Yarn
+  apt:
+    update_cache: yes
+
+- name: Instalar Yarn
+  apt:
+    name: yarn
+    state: present
+
+- name: Verificar versão do Yarn
+  command: yarn -v
+  register: yarn_version
+
+- name: Exibir versão do Yarn
+  debug:
+    msg: "Yarn instalado: {{ yarn_version.stdout }}"

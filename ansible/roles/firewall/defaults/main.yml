@@ -1,0 +1,9 @@
+---
+# Lista de portas a serem abertas no firewall.
+# Por padrão, abrimos as portas padrão para web.
+ufw_allowed_ports:
+  - "80"  # HTTP
+  - "443" # HTTPS
+  - "22"  # SSH
+# Lista de IPs ou ranges permitidos a acessar o servidor.
+ufw_allowed_ips: [] 

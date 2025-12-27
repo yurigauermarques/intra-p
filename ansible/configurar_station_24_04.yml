@@ -1,0 +1,26 @@
+---
+- name: Configurar Estação de Trabalho Local
+  hosts: localhost
+  connection: local
+  become: yes
+  gather_facts: yes
+  
+  roles:
+    - role: firewall
+      vars:
+        disable_ipv6: true
+        ufw_allowed_ports: []
+        ufw_allowed_ips:
+         - "172.16.0.0/12"
+    - role: php
+      vars:
+        php_ini_settings:
+          date.timezone: "America/Cuiaba"
+        repositorio_php: true
+    - role: node
+      vars:
+        node_version: 18.20.0s
+    - role: docker
+      vars:
+        # docker_user:  "{{ ansible_user }}"
+        docker_user:  "usuario_principal"

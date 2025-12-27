@@ -1,0 +1,44 @@
+---
+- name: NGINX | Instalar o Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: NGINX | Criar os diretórios raiz para os sites
+  ansible.builtin.file:
+    path: "{{ item.root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'
+  loop: "{{ nginx_sites }}"
+  when: nginx_sites is defined
+
+- name: NGINX | Criar os arquivos de configuração dos sites a partir do template
+  ansible.builtin.template:
+    src: projeto.conf.j2
+    dest: "/etc/nginx/sites-available/{{ item.server_name }}.conf"
+  loop: "{{ nginx_sites }}"
+  when: nginx_sites is defined
+  notify: Reiniciar Nginx
+
+- name: NGINX | Habilitar os sites criando links simbólicos
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item.server_name }}.conf"
+    dest: "/etc/nginx/sites-enabled/{{ item.server_name }}.conf"
+    state: link
+  loop: "{{ nginx_sites }}"
+  when: nginx_sites is defined
+  notify: Reiniciar Nginx
+
+- name: NGINX | Remover a configuração padrão do Nginx
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reiniciar Nginx
+
+- name: NGINX | Garantir que o serviço Nginx esteja ativo e habilitado
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: yes

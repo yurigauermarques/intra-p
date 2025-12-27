@@ -1,0 +1,81 @@
+---
+- name: PHP | Adicionar o repositório PPA de Ondřej Surý
+  ansible.builtin.apt_repository:
+    repo: ppa:ondrej/php
+    state: present
+    update_cache: yes
+  when:  repositorio_php is defined and repositorio_php == true
+
+
+- name: PHP | Instalar o PHP e as extensões definidas
+  ansible.builtin.apt:
+    name: "{{ php_extensions }}"
+    state: present
+
+- name: PHP | Configurar o php.ini para FPM
+  ansible.builtin.template:
+    src: php.ini.j2
+    dest: "/etc/php/{{ php_version }}/fpm/php.ini"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reiniciar PHP-FPM
+
+- name: PHP | Garantir que o serviço PHP-FPM esteja ativo e habilitado
+  ansible.builtin.service:
+    name: "php{{ php_version }}-fpm"
+    state: started
+    enabled: yes
+
+- name: PHP | Verificar se Composer já está instalado
+  ansible.builtin.stat:
+    path: /usr/local/bin/composer
+  register: composer_stat
+
+- name: PHP | Baixar instalador do Composer
+  ansible.builtin.get_url:
+    url: https://getcomposer.org/installer
+    dest: /tmp/composer-installer.php
+    mode: '0755'
+  when: not composer_stat.stat.exists
+
+- name: PHP | Instalar Composer globalmente
+  ansible.builtin.shell: |
+    php /tmp/composer-installer.php --install-dir=/usr/local/bin --filename=composer
+    chmod +x /usr/local/bin/composer
+  when: not composer_stat.stat.exists
+
+- name: PHP | Verificar se Composer foi instalado corretamente
+  ansible.builtin.stat:
+    path: /usr/local/bin/composer
+  register: composer_final_check
+
+- name: PHP | Verificar versão do Composer instalado
+  ansible.builtin.shell: |
+    timeout 10 /usr/local/bin/composer --version --no-interaction 2>/dev/null || echo "Composer instalado mas houve timeout na verificação"
+  register: composer_version
+  changed_when: false
+  failed_when: false
+  when: composer_final_check.stat.exists
+
+- name: PHP | Mostrar versão do Composer
+  ansible.builtin.debug:
+    msg: "{{ composer_version.stdout if composer_version.stdout is defined else 'Composer não instalado ou erro na verificação' }}"
+  when: composer_version is defined
+
+- name: PHP | Limpar arquivo temporário do instalador
+  ansible.builtin.file:
+    path: /tmp/composer-installer.php
+    state: absent
+
+
+# - name: Symfony CLI | Verificar se Symfony CLI já está instalado
+#   ansible.builtin.stat:
+#     path: /usr/bin/symfony
+#   register: symfony_stat
+
+# - name: Symfony CLI | Instalar o Symfony CLI
+#   ansible.builtin.shell: |
+#     curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | sudo -E bash
+#     sudo apt install symfony-cli
+#   when: not symfony_stat.stat.exists

@@ -1,0 +1,14 @@
+---
+# Nome do banco de dados a ser criado para a aplicação.
+db_name: "projeto_app"
+
+# Nome do usuário que terá acesso a este banco de dados.
+db_user_aplicacao: "aplicacao"
+db_user_migracao: "migration"
+
+# Senha para o usuário do banco de dados.
+# ATENÇÃO: NUNCA armazene senhas em texto plano.
+# Este valor DEVE ser sobrescrito por uma variável criptografada com Ansible Vault.
+db_password_root: "CHANGE_THIS_IN_VAULT"
+db_password_aplicacao: "CHANGE_THIS_IN_VAULT"
+db_password_migracao: "CHANGE_THIS_IN_VAULT"

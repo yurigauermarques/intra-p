@@ -1,0 +1,10 @@
+---
+# Lista de sites a serem configurados pelo Nginx.
+# Cada item na lista é um dicionário que representa um site.
+nginx_sites:
+  - server_name: "projeto.com.br"  # O domínio do site
+    root: "/var/www/projeto"      # A pasta raiz dos arquivos do site
+
+# Versão do PHP para conectar ao FPM.
+# Deve ser a mesma da role php para a conexão funcionar.
+php_version: "8.4"

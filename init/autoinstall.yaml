@@ -1,0 +1,100 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: pt_BR.UTF-8
+  timezone: America/Cuiaba
+  keyboard:
+    layout: "br"
+    variant: ""
+  identity:
+    hostname: "wall-e" # wall-e | r2d2 | T-800 | jarvis 
+    username: "user_principal"
+    realname: "Nome Usuario"
+    # Substitua por um hash de senha gerado com `openssl passwd -6` - 123456
+    password: "$6$Mam1C/n2sEnUmTON$0X0BccgahI4lfk4cTOo6FJLqPRd1/DZooFeWyTQPnIdU4j3FayYZx5g0Dp/eSNhbLKqth/ktvji57XBEewjxv/"
+  
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+  
+  packages:
+    # Essenciais do sistema
+    - curl
+    - wget
+    - htop
+    - xclip
+    - tree
+    - unzip
+    - vim
+    - nano
+    - git
+    - make
+    - ufw
+    - sshpass
+    
+    # Desenvolvimento
+    - nts-common
+    - net-tools
+    - cif-utils
+    - nmap
+    - software-properties-common
+    - apt-transport-https
+    - ca-certificates
+    - gnupg
+    - lsb-release    
+    - ansible
+
+  codecs:
+    install: true
+  drivers:
+    install: true
+  updates: all
+
+      
+  shutdown: reboot
+
+  user-data: 
+    runcmd:
+
+      # Adicionar usuário ao grupo sudo
+      - echo 'user_principal ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/user_principal
+      
+      - |
+        mkdir -p /home/user_principal/.ssh;
+        GITHUB_TOKEN="github_personal_access_token_here";
+        curl -H "Authorization: token $GITHUB_TOKEN" -o /home/user_principal/.ssh/id_rsa https://raw.githubusercontent.com/repositorio-do-fork/main/init/.ssh/id_rsa;
+        curl -H "Authorization: token $GITHUB_TOKEN" -o /home/user_principal/.ssh/id_rsa.pub https://raw.githubusercontent.com/repositorio-do-fork/main/init/.ssh/id_rsa.pub;
+        curl -H "Authorization: token $GITHUB_TOKEN" -o /home/user_principal/.ssh/config https://raw.githubusercontent.com/repositorio-do-fork/main/init/.ssh/config;
+        chmod 700 /home/user_principal/.ssh;
+        chmod 600 /home/user_principal/.ssh/id_rsa;
+        chmod 644 /home/user_principal/.ssh/id_rsa.pub;
+        chmod 600 /home/user_principal/.ssh/config;
+        ssh-keyscan -H github.com >> /home/user_principal/.ssh/known_hosts
+        chown user_principal:user_principal -R /home/user_principal/.ssh;
+      - |
+        cat << 'EOF' >> /home/user_principal/.bashrc
+        # Configuração para ssh-agent
+        if [ -z "$SSH_AUTH_SOCK" ]; then
+            eval "$(ssh-agent -s)"
+            ssh-add ~/.ssh/id_rsa
+        fi
+        
+        EOF
+      - chown user_principal:user_principal /home/user_principal/.bashrc
+      
+      # Configuração global do Git para o usuário user_principal
+      - |
+        su - user_principal -c " 
+          git config --global user.name 'Nome Usuario';
+          git config --global user.email 'email_usuario@gmail.com';
+          git config --global core.editor nano;
+          git config --global pager.branch false;
+        "
+      # Instalação do Visual Studio Code
+      - |
+        wget -O /tmp/vscode.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64' || true
+        if [ -f /tmp/vscode.deb ]; then DEBIAN_FRONTEND=noninteractive apt install -y /tmp/vscode.deb || true; rm -f /tmp/vscode.deb; fi
+      
+      - |
+        git clone git@github.com:repositorio-do-fork.git /home/user_principal/infra || true

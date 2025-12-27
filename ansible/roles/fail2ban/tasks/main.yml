@@ -1,0 +1,20 @@
+---
+- name: FAIL2BAN | Instalar o Fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+
+- name: FAIL2BAN | Criar o arquivo de configuração local a partir do template
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reiniciar fail2ban
+
+- name: FAIL2BAN | Garantir que o serviço Fail2ban esteja ativo e habilitado
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: yes

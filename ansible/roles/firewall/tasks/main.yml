@@ -1,0 +1,52 @@
+---
+- name: FIREWALL | Instalar o UFW
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+
+- name: FIREWALL | Desabilitar o UFW antes de alterar as regras (segurança)
+  community.general.ufw:
+    state: disabled
+
+- name: FIREWALL | Resetar todas as regras para um estado limpo
+  community.general.ufw:
+    state: reset
+
+- name: FIREWALL | Desabilitar IPv6 no UFW
+  ansible.builtin.lineinfile:
+    path: /etc/default/ufw
+    regexp: '^IPV6='
+    line: 'IPV6=no'
+  notify: Habilitar UFW
+  when:  disable_ipv6 is defined and disable_ipv6 == true
+
+- name: FIREWALL | Definir políticas padrão (negar entrada, permitir saída)
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+  notify: Habilitar UFW
+
+- name: FIREWALL | Permitir todo o tráfego de saída
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+  notify: Habilitar UFW
+
+- name: FIREWALL | Permitir conexões nas portas definidas em 'ufw_allowed_ports'
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ ufw_allowed_ports }}"
+  notify: Habilitar UFW
+
+- name: FIREWALL | Permitir conexões dos IPs/ranges definidos
+  community.general.ufw:
+    rule: allow
+    from_ip: "{{ item }}"
+  loop: "{{ ufw_allowed_ips }}"
+  notify: Habilitar UFW
+
+- name: FIREWALL | Desabilitar o UFW antes de alterar as regras (segurança)
+  community.general.ufw:
+    state: enabled

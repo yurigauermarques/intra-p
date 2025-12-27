@@ -1,0 +1,27 @@
+# Arquivo gerenciado pelo Ansible. Não edite manualmente.
+
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name {{ item.server_name }};
+    root {{ item.root }};
+
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # Passa os scripts PHP para o FastCGI server (PHP-FPM)
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+
+        # Conecta ao socket do PHP-FPM da versão correta
+        fastcgi_pass unix:/var/run/php/php{{ php_version }}-fpm.sock;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}

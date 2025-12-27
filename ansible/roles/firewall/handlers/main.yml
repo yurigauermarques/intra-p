@@ -1,0 +1,4 @@
+---
+- name: Habilitar UFW
+  community.general.ufw:
+    state: enabled

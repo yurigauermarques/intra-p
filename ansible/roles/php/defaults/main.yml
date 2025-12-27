@@ -1,0 +1,30 @@
+---
+# A versão do PHP a ser instalada.
+php_version: "8.4"
+
+# Lista de extensões PHP comuns a serem instaladas.
+php_extensions:
+  - php{{ php_version }}-common
+  - php{{ php_version }}-cli
+  - php{{ php_version }}-fpm
+  - php{{ php_version }}-pgsql #pdo_pgsql
+  - php{{ php_version }}-curl
+  - php{{ php_version }}-gd
+  - php{{ php_version }}-mbstring
+  - php{{ php_version }}-xml
+  - php{{ php_version }}-zip
+  - php{{ php_version }}-opcache
+  - php{{ php_version }}-intl
+  - php{{ php_version }}-bcmath
+
+
+# Configurações personalizadas para o php.ini
+# Estes valores serão aplicados no template.
+php_ini_settings:
+  memory_limit: "256M"
+  upload_max_filesize: "64M"
+  post_max_size: "64M"
+  max_execution_time: "300"
+  date.timezone: "America/Sao_Paulo"
+  expose_php: "Off"
+  display_errors: "Off"

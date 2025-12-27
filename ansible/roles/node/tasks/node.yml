@@ -1,0 +1,18 @@
+---
+# Instalação do Node.js
+- name: Adicionar repositório do Node.js
+  ansible.builtin.shell: |
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
+- name: Instalar Node.js
+  apt:
+    name: nodejs
+    state: present
+
+- name: Verificar versão do Node.js
+  command: node -v
+  register: node_version
+
+- name: Exibir versão do Node.js
+  debug:
+    msg: "Node.js instalado: {{ node_version.stdout }}"

@@ -1,0 +1,16 @@
+[DEFAULT]
+# Define os padrões para todas as jails.
+bantime = {{ fail2ban_bantime }}
+findtime = {{ fail2ban_findtime }}
+maxretry = {{ fail2ban_maxretry }}
+
+# Ação de banimento que usa o UFW.
+banaction = ufw
+
+# --- Jails Ativadas ---
+# O loop abaixo irá gerar uma seção para cada item na lista 'fail2ban_jails'.
+
+{% for jail in fail2ban_jails %}
+[{{ jail }}]
+enabled = true
+{% endfor %}

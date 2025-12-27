@@ -1,0 +1,80 @@
+---
+- name: DATABASE | Instalar pacotes do PostgreSQL
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2  # Adaptador Python para o Ansible se comunicar com o Postgres
+    state: present
+    update_cache: true
+
+- name: DATABASE | Garantir que o serviço PostgreSQL esteja ativo e habilitado
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: DATABASE | Definir uma senha segura para o usuário 'postgres' padrão
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD '{{ db_password_root }}';"
+  args:
+    executable: /bin/bash
+  register: postgres_password_result
+  changed_when: postgres_password_result.rc == 0
+
+- name: DATABASE | Criar o banco de dados da aplicação
+  ansible.builtin.shell: |
+    sudo -u postgres createdb {{ db_name }} 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: create_db_result
+  changed_when: "'already exists' not in create_db_result.stderr"
+
+- name: DATABASE | Criar o usuário da aplicação com privilégios no banco de dados
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "CREATE USER {{ db_user_aplicacao }} WITH PASSWORD '{{ db_password_aplicacao }}';" 2>/dev/null || true
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ db_name }} TO {{ db_user_aplicacao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "GRANT CREATE ON SCHEMA public TO {{ db_user_migracao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {{ db_user_aplicacao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {{ db_user_aplicacao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO {{ db_user_aplicacao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO {{ db_user_aplicacao }};"
+    sudo -u postgres psql -d {{ db_name }} -c "GRANT USAGE ON SCHEMA public TO {{ db_user_aplicacao }};"
+
+  args:
+    executable: /bin/bash
+  register: create_user_result
+  changed_when: "'already exists' not in create_user_result.stderr"
+
+#  Não necessário por enquanto
+# - name: DATABASE | Criar o usuário da migracao com privilégios no banco de dados
+#   ansible.builtin.shell: |
+#     sudo -u postgres psql -c "CREATE USER {{ db_user_migracao }} WITH PASSWORD '{{ db_password_migracao }}';" 2>/dev/null || true
+#     sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE {{ db_name }} TO {{ db_user_migracao }};"
+#     sudo -u postgres psql -d {{ db_name }} -c "GRANT CREATE ON SCHEMA public TO {{ db_user_migracao }};"
+#     sudo -u postgres psql -d {{ db_name }} -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {{ db_user_migracao }};"
+#     sudo -u postgres psql -d {{ db_name }} -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO {{ db_user_migracao }};"
+#     sudo -u postgres psql -d {{ db_name }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO {{ db_user_migracao }};"
+#     sudo -u postgres psql -d {{ db_name }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO {{ db_user_migracao }};"
+
+#   args:
+#     executable: /bin/bash
+#   register: create_user_result
+#   changed_when: "'already exists' not in create_user_result.stderr"
+
+- name: DATABASE | Verificar configuração do PostgreSQL
+  ansible.builtin.shell: |
+    sudo -u postgres psql -c "\l" | grep {{ db_name }}
+    sudo -u postgres psql -c "\du" | grep {{ db_user_aplicacao }}
+    sudo -u postgres psql -c "\du" | grep {{ db_user_migracao }}
+  args:
+    executable: /bin/bash
+  register: verify_db_result
+  ignore_errors: true
+
+- name: DATABASE | Mostrar status da configuração
+  ansible.builtin.debug:
+    msg: 
+      - "Banco '{{ db_name }}' configurado: {{ 'SIM' if db_name in verify_db_result.stdout else 'NÃO' }}"
+      - "Usuário '{{ db_user_aplicacao }}' criado: {{ 'SIM' if db_user_aplicacao in verify_db_result.stdout else 'NÃO' }}"
+      - "Usuário '{{ db_user_migracao }}' criado: {{ 'SIM' if db_user_migracao in verify_db_result.stdout else 'NÃO' }}"

@@ -1,0 +1,4 @@
+---
+# Inclui as tasks para instalar Node.js e Yarn
+- include_tasks: node.yml
+- include_tasks: yarn.yml

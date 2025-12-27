@@ -1,0 +1,5 @@
+# roles/docker/defaults/main.yml
+---
+# Defina o nome de um usuário para ser adicionado ao grupo 'docker'.
+# Se deixado em branco, nenhum usuário será adicionado.
+docker_user: ""

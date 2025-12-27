@@ -1,0 +1,12 @@
+---
+# Lista de pacotes essenciais a serem instalados em todos os servidores.
+common_packages:
+  - acl
+  - git
+  - zip
+  - unzip
+  - curl
+  - wget
+  - htop # Um ótimo monitor de processos
+  - build-essential # Necessário para compilar algumas coisas
+  - python3-pip

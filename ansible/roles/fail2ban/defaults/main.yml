@@ -1,0 +1,14 @@
+---
+# Tempo de banimento em segundos. '1h' = 1 hora, '1d' = 1 dia.
+fail2ban_bantime: 1h
+
+# Janela de tempo em segundos para detectar falhas.
+fail2ban_findtime: 10m
+
+# Número de tentativas falhas antes de banir.
+fail2ban_maxretry: 5
+
+# Lista de 'jails' (prisões) a serem ativadas.
+# Por padrão, vamos proteger apenas o SSH.
+fail2ban_jails:
+  - sshd

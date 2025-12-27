@@ -1,0 +1,6 @@
+---
+- name: COMMON | Instalar pacotes essenciais do sistema
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+    update_cache: yes # Garante que o apt update seja executado antes
